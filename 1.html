@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+    <title>لعبة المبتدأ والخبر - التحدي السريع</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        .game-container {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            padding: clamp(15px, 4vw, 30px);
+            max-width: 1000px;
+            width: 100%;
+        }
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            padding: clamp(15px, 3vw, 20px);
+            border-radius: 20px;
+            color: white;
+        }
+        .score-box, .timer-box {
+            background: #e67e22;
+            padding: clamp(8px, 2vw, 12px) clamp(20px, 4vw, 35px);
+            border-radius: 50px;
+            font-size: clamp(20px, 5vw, 28px);
+            font-weight: bold;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 15px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e67e22, #f39c12);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .challenge-area {
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border-radius: 25px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 4px solid #e67e22;
+        }
+        .question-box {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .question-box h3 {
+            color: #7f8c8d;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .sentence {
+            font-size: clamp(32px, 7vw, 48px);
+            font-weight: bold;
+            color: #2c3e50;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            display: inline-block;
+            border: 3px solid #e67e22;
+        }
+        .options-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .option-column {
+            flex: 1 1 250px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .option-column h4 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid #e67e22;
+            font-size: 20px;
+        }
+        .option-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option-item {
+            background: white;
+            border: 2px solid #bdc3c7;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .option-item:hover {
+            background: #e67e22;
+            color: white;
+            border-color: #d35400;
+            transform: translateX(-5px);
+        }
+        .option-item.selected {
+            background: #e67e22;
+            color: white;
+            border-color: #d35400;
+        }
+        .option-item.correct-highlight {
+            background: #27ae60;
+            color: white;
+            border-color: #229954;
+        }
+        .submit-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            font-size: 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 25px 0;
+        }
+        .submit-btn:hover:not(:disabled) {
+            background: #229954;
+            transform: scale(1.02);
+        }
+        .submit-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .feedback-box {
+            text-align: center;
+            padding: 20px;
+            border-radius: 20px;
+            margin: 20px 0;
+            font-size: 20px;
+            min-height: 100px;
+            background: #f8f9fa;
+        }
+        .speed-indicator {
+            text-align: center;
+            font-size: 18px;
+            color: #7f8c8d;
+            margin: 15px 0;
+        }
+        @media (max-width: 700px) {
+            .options-grid {
+                flex-direction: column;
+            }
+            .sentence {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="score-box">⭐ <span id="score">0</span></div>
+            <div class="timer-box">⏱️ <span id="timer">30</span></div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress" style="width: 0%;"></div>
+        </div>
+
+        <div class="challenge-area">
+            <div class="question-box">
+                <h3>السؤال <span id="questionNum">1</span>/5</h3>
+                <div class="sentence" id="sentence"></div>
+            </div>
+
+            <div class="options-grid">
+                <div class="option-column">
+                    <h4>🔵 المبتدأ</h4>
+                    <div class="option-list" id="mubtadaOptions"></div>
+                </div>
+                <div class="option-column">
+                    <h4>🔴 علامة رفع المبتدأ</h4>
+                    <div class="option-list" id="mubtadaSignOptions"></div>
+                </div>
+                <div class="option-column">
+                    <h4>🟢 الخبر</h4>
+                    <div class="option-list" id="khabarOptions"></div>
+                </div>
+                <div class="option-column">
+                    <h4>🟡 علامة رفع الخبر</h4>
+                    <div class="option-list" id="khabarSignOptions"></div>
+                </div>
+            </div>
+
+            <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">🏁 أجب بسرعة</button>
+
+            <div class="feedback-box" id="feedback"></div>
+            <div class="speed-indicator" id="speedIndicator">⚡ سرعة الإجابة ستضاعف النقاط</div>
+        </div>
+    </div>
+
+    <script>
+        const quickQuestions = [
+            {
+                sentence: "العالمان مبدعان",
+                words: ["العالمان", "مبدعان"],
+                correctMubtada: "العالمان",
+                correctKhabar: "مبدعان",
+                mubtadaSign: "الألف",
+                khabarSign: "الألف"
+            },
+            {
+                sentence: "الوطن مقدس",
+                words: ["الوطن", "مقدس"],
+                correctMubtada: "الوطن",
+                correctKhabar: "مقدس",
+                mubtadaSign: "الضمة",
+                khabarSign: "الضمة"
+            },
+            {
+                sentence: "المهذبون محترمون",
+                words: ["المهذبون", "محترمون"],
+                correctMubtada: "المهذبون",
+                correctKhabar: "محترمون",
+                mubtadaSign: "الواو",
+                khabarSign: "الواو"
+            },
+            {
+                sentence: "المعلمات مخلصات",
+                words: ["المعلمات", "مخلصات"],
+                correctMubtada: "المعلمات",
+                correctKhabar: "مخلصات",
+                mubtadaSign: "الضمة",
+                khabarSign: "الضمة"
+            },
+            {
+                sentence: "المسلمان مؤمنان",
+                words: ["المسلمان", "مؤمنان"],
+                correctMubtada: "المسلمان",
+                correctKhabar: "مؤمنان",
+                mubtadaSign: "الألف",
+                khabarSign: "الألف"
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timeLeft = 30;
+        let gameActive = true;
+        let startTime;
+        let timerInterval;
+        
+        let selectedMubtada = null;
+        let selectedKhabar = null;
+        let selectedMubtadaSign = null;
+        let selectedKhabarSign = null;
+
+        const sentenceEl = document.getElementById('sentence');
+        const mubtadaOptions = document.getElementById('mubtadaOptions');
+        const khabarOptions = document.getElementById('khabarOptions');
+        const mubtadaSignOptions = document.getElementById('mubtadaSignOptions');
+        const khabarSignOptions = document.getElementById('khabarSignOptions');
+        const feedbackEl = document.getElementById('feedback');
+        const scoreEl = document.getElementById('score');
+        const timerEl = document.getElementById('timer');
+        const questionNumEl = document.getElementById('questionNum');
+        const progressEl = document.getElementById('progress');
+        const speedIndicator = document.getElementById('speedIndicator');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const signOptions = ['الضمة', 'الألف', 'الواو'];
+
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                if (!gameActive) return;
+                
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    endGame('انتهى الوقت!');
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            const q = quickQuestions[currentQuestion];
+            
+            sentenceEl.textContent = q.sentence;
+            questionNumEl.textContent = currentQuestion + 1;
+            progressEl.style.width = `${((currentQuestion + 1) / quickQuestions.length) * 100}%`;
+            
+            // إعادة تعيين التحديدات
+            selectedMubtada = null;
+            selectedKhabar = null;
+            selectedMubtadaSign = null;
+            selectedKhabarSign = null;
+            
+            // ترتيب عشوائي للكلمات
+            const shuffledWords = [...q.words].sort(() => Math.random() - 0.5);
+            
+            // خيارات المبتدأ
+            mubtadaOptions.innerHTML = '';
+            shuffledWords.forEach(word => {
+                const option = createOption(word, 'mubtada');
+                mubtadaOptions.appendChild(option);
+            });
+            
+            // خيارات الخبر
+            khabarOptions.innerHTML = '';
+            shuffledWords.forEach(word => {
+                const option = createOption(word, 'khabar');
+                khabarOptions.appendChild(option);
+            });
+            
+            // خيارات علامات المبتدأ
+            mubtadaSignOptions.innerHTML = '';
+            const shuffledSigns = [...signOptions].sort(() => Math.random() - 0.5);
+            shuffledSigns.forEach(sign => {
+                const option = createOption(sign, 'mubtadaSign');
+                mubtadaSignOptions.appendChild(option);
+            });
+            
+            // خيارات علامات الخبر
+            khabarSignOptions.innerHTML = '';
+            shuffledSigns.forEach(sign => {
+                const option = createOption(sign, 'khabarSign');
+                khabarSignOptions.appendChild(option);
+            });
+            
+            feedbackEl.innerHTML = '';
+            speedIndicator.innerHTML = '⚡ أجب بسرعة لتحصل على نقاط إضافية!';
+        }
+
+        function createOption(value, type) {
+            const div = document.createElement('div');
+            div.className = 'option-item';
+            div.textContent = value;
+            
+            div.onclick = () => {
+                if (!gameActive) return;
+                
+                // إزالة التحديد السابق
+                if (type === 'mubtada') {
+                    document.querySelectorAll('#mubtadaOptions .option-item').forEach(opt => opt.classList.remove('selected'));
+                    selectedMubtada = value;
+                } else if (type === 'khabar') {
+                    document.querySelectorAll('#khabarOptions .option-item').forEach(opt => opt.classList.remove('selected'));
+                    selectedKhabar = value;
+                } else if (type === 'mubtadaSign') {
+                    document.querySelectorAll('#mubtadaSignOptions .option-item').forEach(opt => opt.classList.remove('selected'));
+                    selectedMubtadaSign = value;
+                } else if (type === 'khabarSign') {
+                    document.querySelectorAll('#khabarSignOptions .option-item').forEach(opt => opt.classList.remove('selected'));
+                    selectedKhabarSign = value;
+                }
+                
+                div.classList.add('selected');
+            };
+            
+            return div;
+        }
+
+        function submitAnswer() {
+            if (!gameActive) return;
+            
+            const q = quickQuestions[currentQuestion];
+            
+            if (!selectedMubtada || !selectedKhabar || !selectedMubtadaSign || !selectedKhabarSign) {
+                feedbackEl.innerHTML = '⚠️ يجب اختيار جميع الخيارات';
+                feedbackEl.style.background = '#f8d7da';
+                feedbackEl.style.color = '#721c24';
+                return;
+            }
+            
+            // حساب وقت الإجابة
+            const answerTime = (Date.now() - startTime) / 1000;
+            const timeBonus = Math.max(0, 10 - Math.floor(answerTime));
+            
+            const mubtadaCorrect = (selectedMubtada === q.correctMubtada);
+            const khabarCorrect = (selectedKhabar === q.correctKhabar);
+            const mubtadaSignCorrect = (selectedMubtadaSign === q.mubtadaSign);
+            const khabarSignCorrect = (selectedKhabarSign === q.khabarSign);
+            
+            if (mubtadaCorrect && khabarCorrect && mubtadaSignCorrect && khabarSignCorrect) {
+                // حساب النقاط مع مكافأة السرعة
+                let pointsEarned = 20 + timeBonus;
+                score += pointsEarned;
+                scoreEl.textContent = score;
+                
+                feedbackEl.innerHTML = `🎉 إجابة صحيحة! +${pointsEarned} نقطة (${timeBonus} نقطة مكافأة سرعة)`;
+                feedbackEl.style.background = '#d4edda';
+                feedbackEl.style.color = '#155724';
+                
+                if (currentQuestion < quickQuestions.length - 1) {
+                    currentQuestion++;
+                    setTimeout(loadQuestion, 1500);
+                } else {
+                    endGame('🏆 تهانينا! أكملت جميع الأسئلة');
+                }
+            } else {
+                // إجابة خاطئة
+                feedbackEl.innerHTML = '❌ إجابة خاطئة';
+                feedbackEl.style.background = '#f8d7da';
+                feedbackEl.style.color = '#721c24';
+                
+                // إظهار الإجابات الصحيحة
+                highlightCorrectAnswers(q);
+                
+                // تقليل الوقت كعقوبة
+                timeLeft = Math.max(0, timeLeft - 5);
+                timerEl.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    endGame('انتهى الوقت!');
+                }
+            }
+        }
+
+        function highlightCorrectAnswers(q) {
+            // تمييز الإجابات الصحيحة
+            Array.from(mubtadaOptions.children).forEach(opt => {
+                if (opt.textContent === q.correctMubtada) {
+                    opt.classList.add('correct-highlight');
+                }
+            });
+            
+            Array.from(khabarOptions.children).forEach(opt => {
+                if (opt.textContent === q.correctKhabar) {
+                    opt.classList.add('correct-highlight');
+                }
+            });
+            
+            Array.from(mubtadaSignOptions.children).forEach(opt => {
+                if (opt.textContent === q.mubtadaSign) {
+                    opt.classList.add('correct-highlight');
+                }
+            });
+            
+            Array.from(khabarSignOptions.children).forEach(opt => {
+                if (opt.textContent === q.khabarSign) {
+                    opt.classList.add('correct-highlight');
+                }
+            });
+        }
+
+        function endGame(message) {
+            gameActive = false;
+            clearInterval(timerInterval);
+            feedbackEl.innerHTML = message;
+            feedbackEl.style.background = '#cce5ff';
+            feedbackEl.style.color = '#004085';
+            submitBtn.disabled = true;
+            speedIndicator.innerHTML = '✨ انتهت اللعبة ✨';
+        }
+
+        // بدء اللعبة
+        loadQuestion();
+        startTimer();
+    </script>
+</body>
+</html>
