@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+    <title>لعبة المبتدأ والخبر - البطاقات التفاعلية</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        .game-container {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            padding: clamp(15px, 4vw, 30px);
+            max-width: 1100px;
+            width: 100%;
+        }
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            padding: clamp(15px, 3vw, 20px);
+            border-radius: 50px;
+            color: white;
+        }
+        .score-box {
+            background: #f1c40f;
+            color: #2c3e50;
+            padding: clamp(8px, 2vw, 12px) clamp(20px, 4vw, 35px);
+            border-radius: 50px;
+            font-size: clamp(18px, 5vw, 24px);
+            font-weight: bold;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .card {
+            flex: 1 1 280px;
+            background: #f8f9fa;
+            border-radius: 25px;
+            padding: 25px 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            border: 3px solid #2ecc71;
+            position: relative;
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+        }
+        .card.selected {
+            border-color: #f39c12;
+            background: #fff3e0;
+            box-shadow: 0 15px 30px rgba(243, 156, 18, 0.3);
+        }
+        .card.correct {
+            border-color: #27ae60;
+            background: #d4edda;
+        }
+        .card.wrong {
+            border-color: #e74c3c;
+            background: #f8d7da;
+        }
+        .card-icon {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 40px;
+            height: 40px;
+            background: #2ecc71;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            border: 3px solid white;
+        }
+        .sentence-text {
+            font-size: clamp(22px, 5vw, 28px);
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 15px;
+            border: 2px solid #2ecc71;
+            word-break: break-word;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 25px;
+        }
+        .option-group {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            border: 2px solid #bdc3c7;
+        }
+        .option-group h4 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 18px;
+            border-right: 4px solid #2ecc71;
+            padding-right: 10px;
+        }
+        .word-options, .sign-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .word-option, .sign-option {
+            padding: clamp(10px, 2.5vw, 15px) clamp(15px, 3vw, 25px);
+            border: 2px solid #2ecc71;
+            border-radius: 12px;
+            font-size: clamp(16px, 4vw, 20px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            color: #2c3e50;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+        }
+        .word-option:hover, .sign-option:hover {
+            background: #2ecc71;
+            color: white;
+            transform: scale(1.05);
+        }
+        .word-option.selected, .sign-option.selected {
+            background: #2ecc71;
+            color: white;
+            border-color: #27ae60;
+        }
+        .word-option.correct-highlight, .sign-option.correct-highlight {
+            background: #27ae60;
+            color: white;
+            border-color: #229954;
+        }
+        .verify-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            font-size: 22px;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 25px 0;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        .verify-btn:hover:not(:disabled) {
+            background: #2980b9;
+            transform: scale(1.02);
+        }
+        .verify-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .result-box {
+            text-align: center;
+            padding: 20px;
+            border-radius: 20px;
+            margin: 20px 0;
+            font-size: 20px;
+            font-weight: bold;
+            min-height: 100px;
+            background: #f8f9fa;
+        }
+        @media (max-width: 600px) {
+            .word-options, .sign-options {
+                flex-direction: column;
+            }
+            .word-option, .sign-option {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="score-box">🏆 النقاط: <span id="score">0</span></div>
+            <div class="score-box">💫 المحاولات: <span id="attempts">3</span></div>
+        </div>
+
+        <div class="cards-container" id="cardsContainer"></div>
+
+        <div class="options-container" id="optionsContainer" style="display: none;">
+            <div class="option-group">
+                <h4>🔵 اختر كلمة المبتدأ:</h4>
+                <div class="word-options" id="mubtadaWordOptions"></div>
+            </div>
+            <div class="option-group">
+                <h4>🔴 اختر علامة رفع المبتدأ:</h4>
+                <div class="sign-options" id="mubtadaSignOptions"></div>
+            </div>
+            <div class="option-group">
+                <h4>🟢 اختر كلمة الخبر:</h4>
+                <div class="word-options" id="khabarWordOptions"></div>
+            </div>
+            <div class="option-group">
+                <h4>🟡 اختر علامة رفع الخبر:</h4>
+                <div class="sign-options" id="khabarSignOptions"></div>
+            </div>
+        </div>
+
+        <button class="verify-btn" id="verifyBtn" onclick="verifyAnswer()" disabled>🔍 تحقق من إجابتي</button>
+
+        <div class="result-box" id="result"></div>
+    </div>
+
+    <script>
+        const sentences = [
+            {
+                text: "العالمان مبدعان",
+                words: ["العالمان", "مبدعان"],
+                correctMubtada: "العالمان",
+                correctKhabar: "مبدعان",
+                mubtadaSign: "الألف",
+                khabarSign: "الألف",
+                explanation: "المثنى يرفع بالألف"
+            },
+            {
+                text: "الوطن مقدس",
+                words: ["الوطن", "مقدس"],
+                correctMubtada: "الوطن",
+                correctKhabar: "مقدس",
+                mubtadaSign: "الضمة",
+                khabarSign: "الضمة",
+                explanation: "المفرد يرفع بالضمة"
+            },
+            {
+                text: "المهذبون محترمون",
+                words: ["المهذبون", "محترمون"],
+                correctMubtada: "المهذبون",
+                correctKhabar: "محترمون",
+                mubtadaSign: "الواو",
+                khabarSign: "الواو",
+                explanation: "جمع المذكر السالم يرفع بالواو"
+            },
+            {
+                text: "المعلمات مخلصات",
+                words: ["المعلمات", "مخلصات"],
+                correctMubtada: "المعلمات",
+                correctKhabar: "مخلصات",
+                mubtadaSign: "الضمة",
+                khabarSign: "الضمة",
+                explanation: "جمع المؤنث السالم يرفع بالضمة"
+            }
+        ];
+
+        let currentSentence = 0;
+        let score = 0;
+        let attempts = 3;
+        let selectedCard = null;
+        let selectedMubtadaWord = null;
+        let selectedKhabarWord = null;
+        let selectedMubtadaSign = null;
+        let selectedKhabarSign = null;
+        let gameActive = true;
+
+        const cardsContainer = document.getElementById('cardsContainer');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const mubtadaWordOptions = document.getElementById('mubtadaWordOptions');
+        const khabarWordOptions = document.getElementById('khabarWordOptions');
+        const mubtadaSignOptions = document.getElementById('mubtadaSignOptions');
+        const khabarSignOptions = document.getElementById('khabarSignOptions');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const resultEl = document.getElementById('result');
+        const scoreEl = document.getElementById('score');
+        const attemptsEl = document.getElementById('attempts');
+
+        const signOptions = ['الضمة', 'الألف', 'الواو'];
+
+        function loadCards() {
+            cardsContainer.innerHTML = '';
+            sentences.forEach((sentence, index) => {
+                const card = createCard(sentence, index);
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        function createCard(sentence, index) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.index = index;
+            
+            const icon = document.createElement('div');
+            icon.className = 'card-icon';
+            icon.textContent = index + 1;
+            
+            const sentenceDiv = document.createElement('div');
+            sentenceDiv.className = 'sentence-text';
+            sentenceDiv.textContent = sentence.text;
+            
+            card.appendChild(icon);
+            card.appendChild(sentenceDiv);
+            
+            card.onclick = () => selectCard(index, card);
+            
+            return card;
+        }
+
+        function selectCard(index, cardElement) {
+            if (!gameActive) return;
+            
+            // إزالة التحديد السابق
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+            
+            cardElement.classList.add('selected');
+            selectedCard = index;
+            currentSentence = index;
+            
+            // إظهار خيارات الكلمات
+            optionsContainer.style.display = 'block';
+            loadOptions();
+            
+            verifyBtn.disabled = false;
+            resultEl.innerHTML = '';
+        }
+
+        function loadOptions() {
+            const sentence = sentences[currentSentence];
+            
+            // ترتيب عشوائي للكلمات
+            const shuffledWords = [...sentence.words].sort(() => Math.random() - 0.5);
+            
+            // خيارات المبتدأ
+            mubtadaWordOptions.innerHTML = '';
+            shuffledWords.forEach(word => {
+                const btn = createOptionButton(word, 'mubtadaWord');
+                mubtadaWordOptions.appendChild(btn);
+            });
+            
+            // خيارات الخبر
+            khabarWordOptions.innerHTML = '';
+            shuffledWords.forEach(word => {
+                const btn = createOptionButton(word, 'khabarWord');
+                khabarWordOptions.appendChild(btn);
+            });
+            
+            // خيارات علامات المبتدأ
+            mubtadaSignOptions.innerHTML = '';
+            const shuffledSigns = [...signOptions].sort(() => Math.random() - 0.5);
+            shuffledSigns.forEach(sign => {
+                const btn = createOptionButton(sign, 'mubtadaSign');
+                mubtadaSignOptions.appendChild(btn);
+            });
+            
+            // خيارات علامات الخبر
+            khabarSignOptions.innerHTML = '';
+            shuffledSigns.forEach(sign => {
+                const btn = createOptionButton(sign, 'khabarSign');
+                khabarSignOptions.appendChild(btn);
+            });
+            
+            // إعادة تعيين التحديدات
+            selectedMubtadaWord = null;
+            selectedKhabarWord = null;
+            selectedMubtadaSign = null;
+            selectedKhabarSign = null;
+        }
+
+        function createOptionButton(value, type) {
+            const btn = document.createElement('div');
+            btn.className = 'word-option';
+            btn.textContent = value;
+            
+            btn.onclick = () => {
+                if (!gameActive) return;
+                
+                // إزالة التحديد السابق من نفس النوع
+                if (type === 'mubtadaWord') {
+                    document.querySelectorAll('#mubtadaWordOptions .word-option').forEach(b => b.classList.remove('selected'));
+                    selectedMubtadaWord = value;
+                } else if (type === 'khabarWord') {
+                    document.querySelectorAll('#khabarWordOptions .word-option').forEach(b => b.classList.remove('selected'));
+                    selectedKhabarWord = value;
+                } else if (type === 'mubtadaSign') {
+                    document.querySelectorAll('#mubtadaSignOptions .word-option').forEach(b => b.classList.remove('selected'));
+                    selectedMubtadaSign = value;
+                } else if (type === 'khabarSign') {
+                    document.querySelectorAll('#khabarSignOptions .word-option').forEach(b => b.classList.remove('selected'));
+                    selectedKhabarSign = value;
+                }
+                
+                btn.classList.add('selected');
+            };
+            
+            return btn;
+        }
+
+        function verifyAnswer() {
+            if (!gameActive) return;
+            
+            const sentence = sentences[currentSentence];
+            
+            if (!selectedMubtadaWord || !selectedKhabarWord || !selectedMubtadaSign || !selectedKhabarSign) {
+                resultEl.innerHTML = '⚠️ يجب اختيار جميع الخيارات';
+                resultEl.style.background = '#f8d7da';
+                resultEl.style.color = '#721c24';
+                return;
+            }
+            
+            const mubtadaCorrect = (selectedMubtadaWord === sentence.correctMubtada);
+            const khabarCorrect = (selectedKhabarWord === sentence.correctKhabar);
+            const mubtadaSignCorrect = (selectedMubtadaSign === sentence.mubtadaSign);
+            const khabarSignCorrect = (selectedKhabarSign === sentence.khabarSign);
+            
+            if (mubtadaCorrect && khabarCorrect && mubtadaSignCorrect && khabarSignCorrect) {
+                // إجابة صحيحة
+                score += 20;
+                scoreEl.textContent = score;
+                
+                // تمييز البطاقة كصحيحة
+                document.querySelectorAll('.card')[currentSentence].classList.add('correct');
+                
+                resultEl.innerHTML = `🎉 إجابة صحيحة! ${sentence.explanation}`;
+                resultEl.style.background = '#d4edda';
+                resultEl.style.color = '#155724';
+                
+                // تعطيل البطاقة
+                disableCard(currentSentence);
+                
+                // التحقق من اكتمال جميع البطاقات
+                checkAllCardsComplete();
+            } else {
+                // إجابة خاطئة
+                attempts--;
+                attemptsEl.textContent = attempts;
+                
+                // تمييز البطاقة كخاطئة
+                document.querySelectorAll('.card')[currentSentence].classList.add('wrong');
+                
+                let errorMsg = '❌ خطأ في: ';
+                if (!mubtadaCorrect) errorMsg += 'المبتدأ ';
+                if (!khabarCorrect) errorMsg += 'الخبر ';
+                if (!mubtadaSignCorrect) errorMsg += 'علامة المبتدأ ';
+                if (!khabarSignCorrect) errorMsg += 'علامة الخبر ';
+                
+                resultEl.innerHTML = errorMsg;
+                resultEl.style.background = '#f8d7da';
+                resultEl.style.color = '#721c24';
+                
+                // إظهار الإجابات الصحيحة
+                highlightCorrectAnswers(sentence);
+                
+                if (attempts <= 0) {
+                    gameActive = false;
+                    resultEl.innerHTML = '😢 انتهت المحاولات! ابدأ اللعبة من جديد';
+                    verifyBtn.disabled = true;
+                }
+            }
+        }
+
+        function highlightCorrectAnswers(sentence) {
+            // تمييز الكلمات الصحيحة
+            Array.from(mubtadaWordOptions.children).forEach(btn => {
+                if (btn.textContent === sentence.correctMubtada) {
+                    btn.classList.add('correct-highlight');
+                }
+            });
+            
+            Array.from(khabarWordOptions.children).forEach(btn => {
+                if (btn.textContent === sentence.correctKhabar) {
+                    btn.classList.add('correct-highlight');
+                }
+            });
+            
+            Array.from(mubtadaSignOptions.children).forEach(btn => {
+                if (btn.textContent === sentence.mubtadaSign) {
+                    btn.classList.add('correct-highlight');
+                }
+            });
+            
+            Array.from(khabarSignOptions.children).forEach(btn => {
+                if (btn.textContent === sentence.khabarSign) {
+                    btn.classList.add('correct-highlight');
+                }
+            });
+        }
+
+        function disableCard(index) {
+            document.querySelectorAll('.card')[index].style.pointerEvents = 'none';
+        }
+
+        function checkAllCardsComplete() {
+            const allCards = document.querySelectorAll('.card');
+            const allCorrect = Array.from(allCards).every(card => 
+                card.classList.contains('correct')
+            );
+            
+            if (allCorrect) {
+                resultEl.innerHTML = '🏆 تهانينا! أكملت جميع الجمل بنجاح';
+                resultEl.style.background = '#cce5ff';
+                resultEl.style.color = '#004085';
+                gameActive = false;
+                verifyBtn.disabled = true;
+            }
+        }
+
+        // بدء اللعبة
+        loadCards();
+    </script>
+</body>
+</html>
